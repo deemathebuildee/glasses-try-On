@@ -2,7 +2,7 @@
 
 A live webcam try-on for prescription glasses that runs in the browser. Your face is tracked in real time, and a 3D pair of glasses follows your head as you move and turn.
 
-Live demo: [ ]
+Live demo: [https://deemathebuildee.github.io/glasses-try-On/ ]
 
 ## The Problem
 
