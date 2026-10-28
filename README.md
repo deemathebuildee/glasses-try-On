@@ -2,7 +2,9 @@
 
 A live webcam try-on for prescription glasses that runs in the browser. Your face is tracked in real time, and a 3D pair of glasses follows your head as you move and turn.
 
-Live demo: [https://deemathebuildee.github.io/glasses-try-On/ ]
+Built during **AL-Qimmah by Tuwaiq club in QUQ university, 2026.**
+
+Live demo: https://deemathebuildee.github.io/glasses-try-On/ 
 
 ## The Problem
 
@@ -60,10 +62,10 @@ Note: the camera only works on localhost or on an https link, so opening the fil
 
 ## Credits
 
-- Glasses models: [Glasses] by [C.U.V] on Sketchfab, [license: CC Attribution], [[link to model page](https://sketchfab.com/3d-models/glasses-05497943410d4a7388695190a5a68eac)]
+- Glasses models: Glasses by C.U.V on Sketchfab, license: CC Attribution, [[link to model page](https://sketchfab.com/3d-models/glasses-05497943410d4a7388695190a5a68eac)]
 - Face tracking: Google MediaPipe
 - 3D rendering: Three.js
 
 ## Author
 
-[Deema Saleh]
+Deema Saleh
