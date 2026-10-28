@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Glasses Try-On</title>
+  <style>
+    body { margin: 0; background: #111; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; color: white; }
+    #stage { position: relative; width: 640px; height: 480px; margin-top: 20px; }
+    video, canvas { position: absolute; top: 0; left: 0; width: 640px; height: 480px; transform: scaleX(-1); }
+    #menu { margin-top: 16px; }
+    button { padding: 10px 16px; margin: 0 6px; border: none; border-radius: 6px; cursor: pointer; }
+    #info { margin-top: 12px; font-size: 18px; color: yellow; max-width: 640px; text-align: center; }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <h2>Try on glasses</h2>
+  <div id="stage">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="overlay"></canvas>
+  </div>
+  <div id="menu">
+    <button data-model="glasses.glb">Style 1</button>
+    <button data-model="glasses2.glb">Style 2</button>
+  </div>
+  <div id="info">Starting...</div>
+
+  <script type="module">
+    import * as THREE from "three";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+    import { FaceLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+
+    const W = 640, H = 480;
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("overlay");
+    const info = document.getElementById("info");
+
+    // 1. Webcam
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: W, height: H } });
+    video.srcObject = stream;
+    await video.play();
+    info.textContent = "Camera works. Loading face tracker...";
+
+    // 2. Face tracking
+    const fileset = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+    );
+    const landmarker = await FaceLandmarker.createFromOptions(fileset, {
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+        delegate: "GPU"
+      },
+      runningMode: "VIDEO",
+      numFaces: 1,
+      outputFacialTransformationMatrixes: true
+    });
+    info.textContent = "Face tracker ready. Loading glasses...";
+
+    // 3. Three.js scene on top of the video
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(W, H);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(63, W / H, 0.1, 1000);
+    scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+    const light = new THREE.DirectionalLight(0xffffff, 1.5);
+    light.position.set(0, 1, 2);
+    scene.add(light);
+
+    // 4. Holder that follows the face
+    const holder = new THREE.Group();
+    holder.matrixAutoUpdate = false;
+    scene.add(holder);
+
+    // Red test box: if you see this on your face, tracking works
+    const testBox = new THREE.Mesh(
+      new THREE.BoxGeometry(3, 1, 1),
+      new THREE.MeshBasicMaterial({ color: 0xff0000 })
+    );
+    testBox.position.set(0, 3, 3);
+    holder.add(testBox);
+
+    // 5. Load glasses, and auto-fit them to a sensible size
+    const loader = new GLTFLoader();
+    let glasses = null;
+
+    function loadGlasses(url) {
+      loader.load(
+        url,
+        (gltf) => {
+          if (glasses) holder.remove(glasses);
+          glasses = gltf.scene;
+
+          // Measure the model
+          const box = new THREE.Box3().setFromObject(glasses);
+          const size = new THREE.Vector3();
+          const center = new THREE.Vector3();
+          box.getSize(size);
+          box.getCenter(center);
+          const factor = 14 / Math.max(size.x, 0.0001);
+          glasses.scale.setScalar(factor);
+          glasses.position.set(-center.x * factor, -center.y * factor + 1, -center.z * factor + 1);
+
+          holder.add(glasses);
+          info.textContent = url + " loaded. Original width: " + size.x.toFixed(3) + ", auto scale: " + factor.toFixed(2);
+        },
+        undefined,
+        (err) => {
+          info.textContent = "Could not load " + url + ". Check the file name and folder.";
+        }
+      );
+    }
+    loadGlasses("glasses.glb");
+
+    document.querySelectorAll("#menu button").forEach((b) => {
+      b.onclick = () => loadGlasses(b.dataset.model);
+    });
+
+    // 6. Every frame: read the face, move the glasses
+    function animate() {
+      const result = landmarker.detectForVideo(video, performance.now());
+      if (result.facialTransformationMatrixes.length > 0) {
+        holder.matrix.fromArray(result.facialTransformationMatrixes[0].data);
+        holder.visible = true;
+      } else {
+        holder.visible = false;
+      }
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+  </script>
+</body>
+</html>
