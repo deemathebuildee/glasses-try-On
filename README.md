@@ -2,7 +2,7 @@
 
 A live webcam try-on for prescription glasses that runs in the browser. Your face is tracked in real time, and a 3D pair of glasses follows your head as you move and turn.
 
-Built during **AL-Qimmah by Tuwaiq club in UQU university, 2026.**
+Built during **AL-Qimmah camp by Tuwaiq club in UQU university, in October 2026.**
 
 Live demo: https://deemathebuildee.github.io/glasses-try-On/ 
 
