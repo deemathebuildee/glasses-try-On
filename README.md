@@ -65,7 +65,8 @@ Note: the camera only works on localhost or on an https link, so opening the fil
 - Glasses models: Glasses by C.U.V on Sketchfab, license: CC Attribution, [[link to model page](https://sketchfab.com/3d-models/glasses-05497943410d4a7388695190a5a68eac)]
 - Face tracking: Google MediaPipe
 - 3D rendering: Three.js
-
+- Built with help from Claude, an AI assistant
+  
 ## Author
 
 Deema Saleh
